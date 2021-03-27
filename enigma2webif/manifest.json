@@ -1,0 +1,7 @@
+{
+  "domain": "enigma2webif",
+  "name": "Enigma2 Webinterface integration (not OpenWebIf)",
+  "documentation": "https://github.com/rs1gg/homeassistant-enigma2webif/",
+  "requirements": [],
+  "codeowners": ["@rs1gg"]
+}

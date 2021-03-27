@@ -1,0 +1,1 @@
+"""Integration for Enigma2 boxes with activated WebInterface."""
