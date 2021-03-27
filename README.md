@@ -15,8 +15,8 @@ Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://githu
 - Everything else (other media player features, GUI configuration, test coverage, ...)
 
 # Installation
-1. Copy the `enigma2webif` folder including its three files to your Home Assistant `/config/custom_compontents/` folder. Have a look [here](https://www.home-assistant.io/docs/configuration/) for more information Home Assistant configuration options.
-2. Ensure the copied folder/files have correct file permissions, such that Home Assistant Core will be able to read them and write the python cache files inside the `enigma2webif` folder.
+1. Copy the `enigma2webif` folder including its three files to your Home Assistant `/config/custom_compontents/` folder. Have a look [here](https://www.home-assistant.io/docs/configuration/) for more information about Home Assistant configuration.
+2. Ensure the copied folder and files have correct file permissions, such that Home Assistant Core will be able to read them and write the python cache files inside the `enigma2webif` folder.
 3. Configure your box(es) in configuration.yaml:
 ```
 # Example configuration.yaml entry
@@ -25,7 +25,7 @@ media_player:
     host: IP_ADDRESS
 ```
 3. Restart Home Assistant Core
-4. Find a new entity of type media player (limited capabilities) in the list of Home Assistant entities.
+4. Find a new entity of type "media player" with limited capabilities in the list of Home Assistant entities.
 
 # Debugging
 1. Set the log level to `debug` for the `enigma2webif` media player component. Example configuration.yaml entry:
@@ -37,7 +37,6 @@ logger:
     custom_components.enigma2webif.media_player: debug
 ```
 2. Have a look at `homeassistant.log`in your preferred way.
-
 
 # Enigma2 WebInterface Docs
 - [WebInterface](https://dream.reichholf.net/wiki/Enigma2:WebInterface)
