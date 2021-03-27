@@ -27,6 +27,9 @@ media_player:
 3. Restart Home Assistant Core
 4. Find a new entity of type "media player" with limited capabilities in the list of Home Assistant entities.
 
+# Support
+This Home Assistant integration comes without support.
+
 # Debugging
 1. Set the log level to `debug` for the `enigma2webif` media player component. Example configuration.yaml entry:
 ```
