@@ -1,7 +1,7 @@
 # homeassistant-enigma2webif
 [Home Assistant](https://www.home-assistant.io/) enigma2 integration for boxes with the [WebInterface](https://dream.reichholf.net/wiki/Enigma2:WebInterface). For boxes with the [OpenWebIf](https://www.home-assistant.io/integrations/enigma2/), the integration is delivered with Home Assistant Core.
 
-Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://github.com/home-assistant/core/tree/dev/homeassistant/components/enigma2).
+Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://github.com/home-assistant/core/tree/dev/homeassistant/components/enigma2) als well as [openwebifpy](https://github.com/fbradyirl/openwebifpy).
 
 # Current state
 ## Works
