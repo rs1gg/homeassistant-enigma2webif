@@ -3,6 +3,7 @@ import logging
 import requests
 import xmltodict
 import voluptuous as vol
+from datetime import datetime
 
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
@@ -72,8 +73,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+ATTR_MEDIA_ID = "media_id"
+ATTR_MEDIA_CHANNEL = "media_channel"
+ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
+ATTR_MEDIA_DESCRIPTION = "media_description"
+ATTR_MEDIA_END_TIME = "media_end_time"
+ATTR_MEDIA_START_TIME = "media_start_time"
+
 class CreateDevice:
     URL_ABOUT = "/web/about"
+    URL_GET_CURRENT = "/web/getcurrent"
     URL_TOGGLE_VOLUME_MUTE = "/web/vol?set=mute"
     URL_SET_VOLUME = "/web/vol?set=set"
 
@@ -110,17 +119,12 @@ class CreateDevice:
 
         if not host:
             _LOGGER.error('Missing host!')
-            raise Exception('Connection to WebIf failed.', None)
+            raise Exception('Connection to WebIf failed, host configuration value missing.', None)
 
         _LOGGER.debug(f"Initialising new webif client for host: {host}")
-        _LOGGER.debug(f"{host} Using a single session client.")
         self.session = requests.Session()
         self.session.auth = (username, password)
 
-        # Used to build a list of URLs which have been tested to exist
-        # (for picons)
-        self.cached_urls_which_exist = []
-        self.prefer_picon = prefer_picon
         self.mac_address = mac_address
         self.turn_off_to_deep = turn_off_to_deep
 
@@ -132,12 +136,8 @@ class CreateDevice:
         else:
             self._base = f"{protocol}://{host}"
 
-        self.in_standby = True
         self.is_offline = False
-
-        self.state = None
-        self.volume = None
-        self.muted = False
+        self.default_all()
         self.get_version()
 
     def log_response_errors(response):
@@ -154,6 +154,7 @@ class CreateDevice:
         self.volume = None
         self.in_standby = True
         self.muted = False
+        self.status_info = {}
 
     def set_volume(self, new_volume):
         """
@@ -232,40 +233,47 @@ class CreateDevice:
         Refresh current state based
         """
         _LOGGER.debug("Update state")
-        status_info = self._call_api(f"{self._base}{self.URL_POWERSTATE}")
-        self.in_standby = status_info['e2powerstate']['e2instandby'] == 'true'
+        powerXml = self._call_api(f"{self._base}{self.URL_POWERSTATE}")
+        self.in_standby = powerXml['e2powerstate']['e2instandby'] == 'true'
 
         if self.is_offline or self.in_standby:
             _LOGGER.debug(f"Fallback to default state values (offline {self.is_offline}, standby {self.in_standby})")
             self.default_all()
             return
 
-        _LOGGER.debug("Online")
-        volumeXml = self._call_api(f"{self._base}{self.URL_SET_VOLUME}")
-        self.muted = volumeXml['e2volume']['e2ismuted'] == 'True'
-        self.volume = int(volumeXml['e2volume']['e2current'])
+        stateXml = self._call_api(f"{self._base}{self.URL_GET_CURRENT}")
+        volumeInfo = stateXml['e2currentserviceinformation']['e2volume']
+        self.muted = volumeInfo['e2ismuted'] == 'True'
+        self.volume = int(volumeInfo['e2current'])
+
+        currEvent = stateXml['e2currentserviceinformation']['e2eventlist']['e2event'][0]
+        self.status_info[ATTR_MEDIA_CURRENTLY_RECORDING] = False
+        self.status_info[ATTR_MEDIA_DESCRIPTION] = currEvent['e2eventname']
+        self.status_info[ATTR_MEDIA_ID] = currEvent['e2eventservicereference']
+        self.status_info[ATTR_MEDIA_CHANNEL] = currEvent['e2eventservicename']
+        startTime = int(currEvent['e2eventstart'])
+        duration = int(currEvent['e2eventduration'])
+        self.status_info[ATTR_MEDIA_START_TIME] = datetime.fromtimestamp(startTime).strftime("%H:%M")
+        self.status_info[ATTR_MEDIA_END_TIME] = datetime.fromtimestamp(startTime + duration).strftime("%H:%M")
 
     def get_version(self):
         """
         Returns enigma2 webinterface version
         """
         url = f"{self._base}{self.URL_ABOUT}"
-        _LOGGER.debug('url: %s', url)
         result = self._call_api(url)
 
         if self.is_offline or not result:
-            _LOGGER.warning(f"{self._base}: Cannot get version as box is unreachable.")
-            return ''
+            _LOGGER.warning(f"{self._base}{self.URL_ABOUT}: Cannot get version as box is unreachable.")
+            return None
 
-        _LOGGER.debug(f"{self._base}: Connected OK. About Response: {result}")
         version = result['e2abouts']['e2about']['e2webifversion']
         _LOGGER.info(f"{self._base}: Enigma2 Webinterface version %s", version)
-        # Discover the mac, so we can WOL the box
-        # later if needed
+        # Discover the mac, so we can WOL the box later if needed
         if not self.mac_address:
             ip_addr = result['e2abouts']['e2about']['e2lanip']
             self.mac_address = result['e2abouts']['e2about']['e2lanmac']
-            _LOGGER.info('discovered %s mac_address: %s', ip_addr, self.mac_address)
+            _LOGGER.info('found %s mac_address: %s', ip_addr, self.mac_address)
 
         return version
 
@@ -275,13 +283,14 @@ class CreateDevice:
         try:
             response = self.session.get(url)
         except requests.exceptions.ConnectionError as err:
+            self.is_offline = True
             _LOGGER.error(f"There was a connection error calling {url}"
                           f" Please check the network connection to the Enigma2"
                           f" box is ok and enable debug logging in "
                           f"Enigma2 if required. Error: {err}")
             return None
 
-        _LOGGER.debug(f"Got {response.status_code} from : %s", url)
+        _LOGGER.debug(f"Got {response.status_code} from: %s", url)
         if response.status_code not in [200]:
             error_msg = "Got {} from {}: {}".format(
                 response.status_code, url, response.text)
@@ -300,14 +309,9 @@ class CreateDevice:
             return xmltodict.parse(response.text)
 
         if response.status_code == 401:
-            raise Exception(f"{url}: Failed to authenticate "
-                            "with WebIf "
-                            "check your "
-                            "username and password.")
+            raise Exception(f"{url}: Failed to authenticate with WebIf. Check your username and password.")
         if response.status_code == 404:
-            raise Exception(f"Got a 404 from {url}. Do"
-                            "you have the WebIf plugin"
-                            "installed?")
+            raise Exception(f"Got a 404 from {url}. Do you have the Enigma2 WebInterface plugin installed and enabled (check with your browser)?")
 
         _LOGGER.error("Invalid response from WebIf: %s", response)
         return None
@@ -384,6 +388,26 @@ class Enigma2Device(MediaPlayerEntity):
     def turn_on(self):
         """Turn the media player on."""
         self.e2_box.turn_on()
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self.e2_box.status_info[ATTR_MEDIA_CHANNEL] + ": " + self.e2_box.status_info[ATTR_MEDIA_DESCRIPTION]
+
+    @property
+    def media_channel(self):
+        """Channel of current playing media."""
+        return self.e2_box.status_info[ATTR_MEDIA_CHANNEL]
+
+    @property
+    def media_content_id(self):
+        """Service Ref of current playing media."""
+        return self.e2_box.status_info[ATTR_MEDIA_ID]
+
+    @property
+    def media_content_type(self):
+        """Type of video currently playing."""
+        return MEDIA_TYPE_TVSHOW
 
     @property
     def is_volume_muted(self):
