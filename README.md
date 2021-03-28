@@ -17,15 +17,26 @@ Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://githu
 # Installation
 1. Copy the `enigma2webif` folder including its three files to your Home Assistant `/config/custom_compontents/` folder. Have a look [here](https://www.home-assistant.io/docs/configuration/) for more information about Home Assistant configuration.
 2. Ensure the copied folder and files have correct file permissions, such that Home Assistant Core will be able to read them and write the python cache files inside the `enigma2webif` folder.
-3. Configure your box(es) in configuration.yaml:
+
+# Configuration
+1. Configure your box(es) in Home Assistant Core `configuration.yaml`:
 ```
 # Example configuration.yaml entry
 media_player:
   - platform: enigma2webif
     host: IP_ADDRESS
 ```
-3. Restart Home Assistant Core
-4. Find a new entity of type "media player" with limited capabilities in the list of Home Assistant entities.
+Other configuration options:
+| Option | Usage |
+|--------|-------|
+| mac_address | Declare MAC address for wake-on-lan. |
+| ssl | Set to True to use HTTPS, False (default) for HTTP. |
+| port | The TCP port to use. Defaults to 80 or 443 for HTTP or HTTPS respectively. |
+| username | The username if Enigma2 WebInterface is configured with authentication. |
+| password | The username if Enigma2 WebInterface is configured with authentication. |
+| name | Default name of the created Home Assistant entity. |
+2. Restart Home Assistant Core
+3. Find a new entity of type "media player" with limited capabilities in the list of Home Assistant entities.
 
 # Support
 This Home Assistant integration comes without support.
