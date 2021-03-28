@@ -29,12 +29,12 @@ media_player:
 Other configuration options:
 | Option | Usage |
 |--------|-------|
-| mac_address | Declare MAC address for wake-on-lan. |
 | ssl | Set to True to use HTTPS, False (default) for HTTP. |
 | port | The TCP port to use. Defaults to 80 or 443 for HTTP or HTTPS respectively. |
 | username | The username if Enigma2 WebInterface is configured with authentication. |
 | password | The username if Enigma2 WebInterface is configured with authentication. |
 | name | Default name of the created Home Assistant entity. |
+| mac_address | Declare MAC address for wake-on-lan. The MAC address is read from the WebInterface API. Only useful, if there is no other way to wakeup an offline box. |
 2. Restart Home Assistant Core
 3. Find a new entity of type "media player" with limited capabilities in the list of Home Assistant entities.
 
