@@ -7,6 +7,7 @@ Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://githu
 ## Works
 - Standby toggle, wake-on-lan if offline (however, it will take some time for your box to startup)
 - Volume controls
+- Display of current TV channel and event.
 - Configuration in [configuration.yaml](https://www.home-assistant.io/docs/configuration/)
 ## Works but...
 - State changes are polled every 10s from the box. If you e.g. modify the volume with your IR remote, it takes up to 10s to reflect the new volume in Home Assistant.
