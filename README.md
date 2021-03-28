@@ -30,9 +30,9 @@ Other configuration options:
 | Option | Usage |
 |--------|-------|
 | ssl | Set to True to use HTTPS, False (default) for HTTP. |
-| port | The TCP port to use. Defaults to 80 or 443 for HTTP or HTTPS respectively. |
+| port | The TCP port to use. Defaults to `None`. |
 | username | The username if Enigma2 WebInterface is configured with authentication. |
-| password | The username if Enigma2 WebInterface is configured with authentication. |
+| password | The password if Enigma2 WebInterface is configured with authentication. |
 | name | Default name of the created Home Assistant entity. |
 | mac_address | Declare MAC address for wake-on-lan. The MAC address is read from the WebInterface API. Only useful, if there is no other way to wakeup an offline box. |
 2. Restart Home Assistant Core
