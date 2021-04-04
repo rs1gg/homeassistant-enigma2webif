@@ -11,6 +11,7 @@ Copied, pasted, and adapted from [Homeassistant enigma2 OpenWebIf](https://githu
 - Configuration in [configuration.yaml](https://www.home-assistant.io/docs/configuration/)
 ## Works but...
 - State changes are polled every 10s from the box. If you e.g. modify the volume with your IR remote, it takes up to 10s to reflect the new volume in Home Assistant.
+- The API used to poll the state is `/web/getcurrent`, which takes quite long (4-8sec on a DM800) and therefore triggers the spinner and freeze the enigma2 UI.
 - You will probably need things like SSH, SCP, chown, chmod, or vi/nano to get this to work. If you are not familiar with configuring Home Assistant and are not willing to find your way through the [Home Assistant docs](https://www.home-assistant.io/docs/configuration/), this integration is not for you ;-)
 ## Not yet
 - Everything else (other media player features, GUI configuration, test coverage, ...)
