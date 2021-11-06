@@ -241,20 +241,27 @@ class CreateDevice:
             self.default_all()
             return
 
-        stateXml = self._call_api(f"{self._base}{self.URL_GET_CURRENT}")
-        volumeInfo = stateXml['e2currentserviceinformation']['e2volume']
+        volumeXml = self._call_api(f"{self._base}{self.URL_SET_VOLUME}")
+        volumeInfo = volumeXml['e2volume']
+        #stateXml = self._call_api(f"{self._base}{self.URL_GET_CURRENT}")
+        #volumeInfo = stateXml['e2currentserviceinformation']['e2volume']
         self.muted = volumeInfo['e2ismuted'] == 'True'
         self.volume = int(volumeInfo['e2current'])
 
-        currEvent = stateXml['e2currentserviceinformation']['e2eventlist']['e2event'][0]
-        self.status_info[ATTR_MEDIA_CURRENTLY_RECORDING] = False
-        self.status_info[ATTR_MEDIA_DESCRIPTION] = currEvent['e2eventname']
-        self.status_info[ATTR_MEDIA_ID] = currEvent['e2eventservicereference']
-        self.status_info[ATTR_MEDIA_CHANNEL] = currEvent['e2eventservicename']
-        startTime = int(currEvent['e2eventstart'])
-        duration = int(currEvent['e2eventduration'])
-        self.status_info[ATTR_MEDIA_START_TIME] = datetime.fromtimestamp(startTime).strftime("%H:%M")
-        self.status_info[ATTR_MEDIA_END_TIME] = datetime.fromtimestamp(startTime + duration).strftime("%H:%M")
+        subserviceXml = self._call_api(f"{self._base}/web/subservices")
+        serviceInfo = subserviceXml['e2servicelist']['e2service']
+        self.status_info[ATTR_MEDIA_CHANNEL] = serviceInfo['e2servicename']
+        serviceReference = serviceInfo['e2servicereference']
+
+        #currEvent = stateXml['e2currentserviceinformation']['e2eventlist']['e2event'][0]
+        #self.status_info[ATTR_MEDIA_CURRENTLY_RECORDING] = False
+        #self.status_info[ATTR_MEDIA_DESCRIPTION] = currEvent['e2eventname']
+        #self.status_info[ATTR_MEDIA_ID] = currEvent['e2eventservicereference']
+        #self.status_info[ATTR_MEDIA_CHANNEL] = currEvent['e2eventservicename']
+        #startTime = int(currEvent['e2eventstart'])
+        #duration = int(currEvent['e2eventduration'])
+        #self.status_info[ATTR_MEDIA_START_TIME] = datetime.fromtimestamp(startTime).strftime("%H:%M")
+        #self.status_info[ATTR_MEDIA_END_TIME] = datetime.fromtimestamp(startTime + duration).strftime("%H:%M")
 
     def get_version(self):
         """
@@ -392,7 +399,8 @@ class Enigma2Device(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self.e2_box.status_info[ATTR_MEDIA_CHANNEL] + ": " + self.e2_box.status_info[ATTR_MEDIA_DESCRIPTION]
+        return self.e2_box.status_info[ATTR_MEDIA_CHANNEL]
+        #return self.e2_box.status_info[ATTR_MEDIA_CHANNEL] + ": " + self.e2_box.status_info[ATTR_MEDIA_DESCRIPTION]
 
     @property
     def media_channel(self):
@@ -402,7 +410,8 @@ class Enigma2Device(MediaPlayerEntity):
     @property
     def media_content_id(self):
         """Service Ref of current playing media."""
-        return self.e2_box.status_info[ATTR_MEDIA_ID]
+        return self.e2_box.status_info[ATTR_MEDIA_CHANNEL]
+        #return self.e2_box.status_info[ATTR_MEDIA_ID]
 
     @property
     def media_content_type(self):

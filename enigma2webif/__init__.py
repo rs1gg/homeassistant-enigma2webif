@@ -1,1 +1,1 @@
-"""Integration for Enigma2 boxes with activated WebInterface."""
+"""Support for Enigma2 devices."""
